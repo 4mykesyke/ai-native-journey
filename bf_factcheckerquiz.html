@@ -190,6 +190,7 @@
             };
 
             let currentQuestionIndex;
+            let isProcessing = false; // Guard to prevent double submission
 
             // Function to select and display a new random question
             const loadNewQuestion = () => {
@@ -202,16 +203,20 @@
                 resultContainer.classList.add('hidden'); // Hide previous result
                 checkButton.disabled = false;
                 checkButton.textContent = 'Verify Answer';
-                claimInput.focus(); // Focus on the input for immediate typing
+                isProcessing = false; // Reset guard
+                setTimeout(() => claimInput.focus(), 50); // Ensure input is focused
             };
             
             const handleFactCheck = () => {
+                if (isProcessing) return; // Prevent double submission
+                isProcessing = true;
                 const inputText = claimInput.value.trim().toLowerCase();
                 const currentQuestionData = quizQuestions[currentQuestionIndex]; // Get data for the current question
                 
                 // Handle empty input
                 if (!inputText) {
                     displayResults(emptyResponse);
+                    isProcessing = false;
                     return; // Stop execution if input is empty
                 }
                 
@@ -221,8 +226,8 @@
 
                 setTimeout(() => {
                     let response;
-                    // Check if the user's answer matches the correct answer
-                    if (inputText === currentQuestionData.correctAnswer) {
+                    // Check if the user's answer matches the correct answer (case-insensitive, ignore whitespace)
+                    if (inputText.replace(/\s+/g, '') === currentQuestionData.correctAnswer.replace(/\s+/g, '').toLowerCase()) {
                         response = currentQuestionData.correctResponse;
                     } else {
                         response = currentQuestionData.incorrectResponse;
@@ -231,7 +236,6 @@
                     displayResults(response);
                     
                     // After displaying results, prepare for the next question
-                    // This creates a "Next Question" button or automatically loads after a delay
                     setTimeout(() => {
                         loadNewQuestion(); // Load a new question after a short delay
                     }, 3000); // Wait 3 seconds before loading new question
