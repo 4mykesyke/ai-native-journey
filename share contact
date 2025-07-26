@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Share Contact</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
     <style>
         body {
             font-family: "Inter", sans-serif;
@@ -196,10 +197,56 @@
                 <span class="btn-text">Send</span>
             </button>
         </div>
+        <!-- Install PWA Button -->
+        <div class="flex justify-center mt-4">
+            <button id="installBtn" class="btn btn-action" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 2a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 13.586V3a1 1 0 011-1z" />
+                </svg>
+                <span class="btn-text">Install App</span>
+            </button>
+        </div>
     </div>
 
     <script>
-        // ... existing JavaScript code ...
+        // Service Worker Registration and Install Event
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('service-worker.js')
+              .then(function(registration) {
+                console.log('ServiceWorker registration successful:', registration.scope);
+              }, function(err) {
+                console.log('ServiceWorker registration failed:', err);
+              });
+          });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent the mini-infobar from appearing on mobile
+          e.preventDefault();
+          // Stash the event so it can be triggered later.
+          deferredPrompt = e;
+          // Optionally, show your own install button
+          // Example:
+          const installBtn = document.getElementById('installBtn');
+          if (installBtn) installBtn.style.display = 'block';
+
+          if (installBtn) {
+            installBtn.addEventListener('click', () => {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                  console.log('User accepted the install prompt');
+                } else {
+                  console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+              });
+            });
+          }
+        });
     </script>
 </body>
 </html> 
