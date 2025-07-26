@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Contact</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            color: #e0e0e0;
+        }
+        .container {
+            background-color: #2a2a2a;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background-color: #000;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .record-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.75rem;
+            z-index: 10;
+            transition: opacity 0.5s ease-out;
+        }
+        .btn {
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            width: 6rem;
+            flex-shrink: 0;
+        }
+        .btn-text {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .btn-action {
+            background-color: #ef4444;
+            color: #000;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            transition: opacity 0.5s ease-out;
+        }
+        .btn-action:hover {
+            background-color: #dc2626;
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: #000;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        input {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.75rem;
+            width: 100%;
+            font-size: 1rem;
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+        }
+        input::placeholder {
+            color: #b0b0b0;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: none;
+            background-color: #5a5a5a;
+        }
+        .message-box {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .message-box.success {
+            background-color: #22c55e;
+            color: #fff;
+        }
+        .message-box.error {
+            background-color: #ef4444;
+            color: #fff;
+        }
+        .message-box.info {
+            background-color: #3b82f6;
+            color: #fff;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .input-group > div {
+            margin-bottom: 0;
+        }
+        .input-group > div:not(:last-child) {
+            margin-bottom: 0.75rem;
+        }
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-white">Share Contact</h1>
+        <div id="messageBox" class="message-box hidden"></div>
+        <div class="video-container">
+            <video id="videoPreview" controls autoplay muted></video>
+            <div id="recordOverlay" class="record-overlay">
+                <button id="recordButton" class="btn btn-action">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="btn-text">Record</span>
+                </button>
+                <button id="stopButton" class="btn btn-danger hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 9a1 1 0 00-.707 1.707L10.586 14 8 16.586A1 1 0 109.414 18l3.293-3.293a1 1 0 000-1.414L9.414 10 12.707 6.707A1 1 0 0011.293 5.293L8 8.586V9z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="btn-text">Stop</span>
+                </button>
+            </div>
+        </div>
+        <div class="input-group">
+            <div>
+                <input type="url" id="videoLink" placeholder="Paste video link" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+            <div>
+                <input type="tel" id="phoneNumber" placeholder="Phone Number" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+            <div>
+                <input type="email" id="emailAddress" placeholder="Email Address" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+        </div>
+        <div class="flex justify-center">
+            <button id="sendButton" class="btn btn-action">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.314l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.001 3.001 0 000-1.722l4.94-2.47C13.146 6.882 14.006 7 15 7z" />
+                </svg>
+                <span class="btn-text">Send</span>
+            </button>
+        </div>
+        <div class="flex justify-center mt-4">
+            <button id="installBtn" class="btn btn-action" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 2a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 13.586V3a1 1 0 011-1z" />
+                </svg>
+                <span class="btn-text">Install App</span>
+            </button>
+        </div>
+    </div>
+    <script>
+        // Service Worker Registration and Install Event
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('service-worker.js')
+              .then(function(registration) {
+                console.log('ServiceWorker registration successful:', registration.scope);
+              }, function(err) {
+                console.log('ServiceWorker registration failed:', err);
+              });
+          });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent the mini-infobar from appearing on mobile
+          e.preventDefault();
+          // Stash the event so it can be triggered later.
+          deferredPrompt = e;
+          // Optionally, show your own install button
+          // Example:
+          const installBtn = document.getElementById('installBtn');
+          if (installBtn) installBtn.style.display = 'block';
+
+          if (installBtn) {
+            installBtn.addEventListener('click', () => {
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                  console.log('User accepted the install prompt');
+                } else {
+                  console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+              });
+            });
+          }
+        });
+    </script>
+</body>
+</html> 
