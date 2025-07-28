@@ -2,7 +2,7 @@
   "name": "Share Contact",
   "short_name": "Share Contact",
   "description": "Easily share video pitches and contact information.",
-  "start_url": "./share-contact.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#1a1a1a",

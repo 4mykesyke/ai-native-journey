@@ -3,61 +3,632 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Share Contact - Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=./share-contact.html">
+    <title>Share Contact</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json"> <!-- Correctly linked manifest -->
     <style>
+        /* Base styles for the body and container */
         body {
             font-family: "Inter", sans-serif;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
+            background-color: #1a1a1a; /* Dark background */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
             padding: 1rem;
+            color: #e0e0e0; /* Light text for readability */
         }
         .container {
-            text-align: center;
-            background-color: #2a2a2a;
+            background-color: #2a2a2a; /* Slightly lighter dark for container */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Darker shadow */
             padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Default gap between major sections */
         }
-        .spinner {
-            border: 3px solid #4a4a4a;
-            border-top: 3px solid #ef4444;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
+
+        /* Video playback area styling */
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio (height / width * 100%) */
+            background-color: #000;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensure video fits within bounds */
         }
-        a {
-            color: #ef4444;
-            text-decoration: none;
+
+        /* Record button overlay styling */
+        .record-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            border-radius: 0.75rem;
+            z-index: 10; /* Above the video */
+            transition: opacity 0.5s ease-out; /* Smooth fade transition */
         }
-        a:hover {
-            text-decoration: underline;
+
+        /* General button styling */
+        .btn {
+            padding: 0.75rem 0.5rem; /* Reduced horizontal padding to give more space for text centering */
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            width: 6rem; /* Approx 1 inch */
+            flex-shrink: 0;
+        }
+        .btn-text { /* Class for the text span inside buttons to ensure centering */
+            flex-grow: 1; /* Allows text to take up available space */
+            text-align: center; /* Centers the text within its flex-grown space */
+        }
+
+        /* Specific styling for action buttons (Record, Send) */
+        .btn-action {
+            background-color: #ef4444; /* Red */
+            color: #000; /* Black text */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            transition: opacity 0.5s ease-out; /* Smooth fade transition */
+        }
+        .btn-action:hover {
+            background-color: #dc2626; /* Darker red on hover */
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Specific styling for the stop button */
+        .btn-danger {
+            background-color: #ef4444; /* Red */
+            color: #000; /* Black text */
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* Darker red on hover */
+        }
+
+        /* Input field styling */
+        input {
+            padding: 0.75rem;
+            border: none; /* No visible border */
+            border-radius: 0.75rem;
+            width: 100%;
+            font-size: 1rem;
+            background-color: #4a4a4a; /* Grey input area */
+            color: #e0e0e0; /* Light text for input */
+        }
+        input::placeholder {
+            color: #b0b0b0; /* Lighter placeholder text */
+        }
+        input:focus {
+            outline: none; /* Remove default outline */
+            box-shadow: none; /* No focus shadow */
+            background-color: #5a5a5a; /* Slightly darker grey on focus */
+        }
+
+        /* Message box for user feedback */
+        .message-box {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        .message-box.success {
+            background-color: #22c55e; /* Green */
+            color: #fff;
+        }
+        .message-box.error {
+            background-color: #ef4444; /* Red */
+            color: #fff;
+        }
+        .message-box.info {
+            background-color: #3b82f6; /* Blue */
+            color: #fff;
+        }
+
+        /* Styling for grouped input fields */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0; /* Remove gap between inputs within this group */
+        }
+        .input-group > div {
+            margin-bottom: 0; /* Ensure no extra margin from parent gap */
+        }
+        /* Apply a small margin between inputs within the group, except for the last one */
+        .input-group > div:not(:last-child) {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Utility class for fading elements */
+        .fade-out {
+            opacity: 0;
+            pointer-events: none; /* Make it unclickable when fading out */
+        }
+
+        /* Hidden class for elements */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="spinner"></div>
-        <h1>Share Contact</h1>
-        <p>Redirecting to the app...</p>
-        <p>If you're not redirected automatically, <a href="share-contact.html">click here</a></p>
+        <h1 class="text-3xl font-bold text-center text-white">Share Contact</h1>
+
+        <!-- Message Box for Feedback -->
+        <div id="messageBox" class="message-box hidden"></div>
+
+        <!-- Video Preview Area with Record Button Overlay -->
+        <div class="video-container">
+            <video id="videoPreview" controls autoplay muted></video>
+            <div id="recordOverlay" class="record-overlay">
+                <button id="recordButton" class="btn btn-action">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="btn-text">Record</span>
+                </button>
+                <button id="stopButton" class="btn btn-danger hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 9a1 1 0 00-.707 1.707L10.586 14 8 16.586A1 1 0 109.414 18l3.293-3.293a1 1 0 000-1.414L9.414 10 12.707 6.707A1 1 0 0011.293 5.293L8 8.586V9z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="btn-text">Stop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Combined Input Fields: Your Info + Recipient Info -->
+        <div class="input-group">
+            <!-- Video Link Input -->
+            <div>
+                <input type="url" id="videoLink" placeholder="Paste video link" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+
+            <!-- Phone Number Input -->
+            <div>
+                <input type="tel" id="phoneNumber" placeholder="Your Phone Number" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+
+            <!-- Email Input -->
+            <div>
+                <input type="email" id="emailAddress" placeholder="Your Email Address" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+
+            <!-- Recipient Contact Input (now part of the same group) -->
+            <div>
+                <input type="text" id="recipientContact" placeholder="Recipient Phone or Email" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+        </div>
+
+        <!-- Send Button - Centered and fixed width -->
+        <div class="flex justify-center">
+            <button id="sendButton" class="btn btn-action">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.314l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.001 3.001 0 000-1.722l4.94-2.47C13.146 6.882 14.006 7 15 7z" />
+                </svg>
+                <span class="btn-text">Send</span>
+            </button>
+        </div>
     </div>
+
     <script>
-        // JavaScript redirect as fallback
-        setTimeout(() => {
-            window.location.href = 'share-contact.html';
-        }, 1000);
+        // This script handles the video recording, link input, and sharing functionality.
+        // It's designed to be self-contained within this HTML file.
+        const videoPreview = document.getElementById('videoPreview');
+        const recordOverlay = document.getElementById('recordOverlay');
+        const videoLinkInput = document.getElementById('videoLink');
+        const recordButton = document.getElementById('recordButton');
+        const stopButton = document.getElementById('stopButton');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const emailAddressInput = document.getElementById('emailAddress');
+        const recipientContactInput = document.getElementById('recipientContact'); // New: Recipient contact input
+        const sendButton = document.getElementById('sendButton');
+        const messageBox = document.getElementById('messageBox');
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        let recordedVideoBlob = null;
+        let recordingTimer;
+        let countdownInterval;
+        let currentVideoURL = null;
+        const RECORD_DURATION = 30000; // 30 seconds in milliseconds
+        const FADE_DURATION = 500; // Milliseconds for fade transition
+
+        // Function to display messages in the message box
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Function to cleanup video URL to prevent memory leaks
+        function cleanupVideoURL() {
+            if (currentVideoURL) {
+                URL.revokeObjectURL(currentVideoURL);
+                currentVideoURL = null;
+            }
+        }
+
+        // Function to clear video preview and recorded data
+        function resetVideoState() {
+            // Stop any ongoing recording
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+
+            // Clear timers
+            if (recordingTimer) {
+                clearTimeout(recordingTimer);
+                recordingTimer = null;
+            }
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+
+            // Stop video tracks
+            if (videoPreview.srcObject) {
+                videoPreview.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            // Cleanup video URL
+            cleanupVideoURL();
+
+            // Reset video element
+            videoPreview.srcObject = null;
+            videoPreview.src = '';
+            videoPreview.load();
+
+            // Reset recorded data
+            recordedVideoBlob = null;
+            recordedChunks = [];
+
+            // Reset UI state
+            recordOverlay.classList.remove('hidden', 'fade-out');
+            recordButton.classList.remove('hidden');
+            stopButton.classList.add('hidden');
+
+            // Reset record button text properly
+            const recordButtonText = recordButton.querySelector('.btn-text');
+            if (recordButtonText) {
+                recordButtonText.textContent = 'Record';
+            }
+
+            // Ensure send button is visible
+            sendButton.classList.remove('hidden', 'fade-out');
+        }
+
+        // Start recording
+        recordButton.addEventListener('click', async () => {
+            // Prevent multiple clicks
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                return;
+            }
+
+            resetVideoState(); // Resets state and ensures overlay/send button are visible first
+            videoLinkInput.value = ''; // Ensure link input is clear
+
+            // Fade out record overlay immediately
+            recordOverlay.classList.add('fade-out');
+            setTimeout(() => {
+                recordOverlay.classList.add('hidden'); // Hide after fade
+            }, FADE_DURATION);
+
+            try {
+                // Request access to camera and microphone
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }, 
+                    audio: true 
+                });
+                
+                videoPreview.srcObject = stream;
+                await videoPreview.play();
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp9,opus'
+                });
+                recordedChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    if (recordedChunks.length > 0) {
+                        recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                        currentVideoURL = URL.createObjectURL(recordedVideoBlob);
+                        videoPreview.srcObject = null;
+                        videoPreview.src = currentVideoURL;
+                        videoPreview.load();
+                        videoPreview.play().catch(err => {
+                            console.error('Error playing recorded video:', err);
+                        });
+                        videoPreview.muted = false;
+                        showMessage('Video recorded! You can now send or retake.', 'success');
+                    } else {
+                        showMessage('No video data recorded. Please try again.', 'error');
+                    }
+
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // After recording stops, make overlay visible again for retake/new record
+                    recordOverlay.classList.remove('hidden', 'fade-out');
+                    recordButton.classList.add('hidden'); // Keep record button hidden
+                    stopButton.classList.remove('hidden'); // Show stop/retake button
+                };
+
+                mediaRecorder.onerror = (event) => {
+                    console.error('MediaRecorder error:', event);
+                    showMessage('Error during recording. Please try again.', 'error');
+                    resetVideoState();
+                };
+
+                mediaRecorder.start();
+                showMessage('Recording started... 30 seconds remaining!', 'info');
+
+                let timeLeft = RECORD_DURATION / 1000;
+                countdownInterval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                }, 1000);
+
+                recordingTimer = setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        if (countdownInterval) {
+                            clearInterval(countdownInterval);
+                            countdownInterval = null;
+                        }
+                    }
+                }, RECORD_DURATION);
+
+            } catch (err) {
+                console.error('Error accessing media devices:', err);
+                let errorMessage = 'Could not access camera/microphone.';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'Camera/microphone permission denied. Please allow access and try again.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera or microphone found. Please check your device.';
+                }
+                showMessage(errorMessage, 'error');
+                // Ensure overlay is visible if error occurs
+                recordOverlay.classList.remove('hidden', 'fade-out');
+                recordButton.classList.remove('hidden');
+                stopButton.classList.add('hidden');
+            }
+        });
+
+        // Stop recording / Retake
+        stopButton.addEventListener('click', () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                if (recordingTimer) {
+                    clearTimeout(recordingTimer);
+                    recordingTimer = null;
+                }
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                showMessage('Recording stopped. You can now send or retake.', 'info');
+            }
+            // After stopping, make record button visible on overlay for retake
+            recordOverlay.classList.remove('hidden', 'fade-out');
+            recordButton.classList.remove('hidden');
+            stopButton.classList.add('hidden');
+        });
+
+        // Handle video link input change
+        videoLinkInput.addEventListener('input', () => {
+            const linkValue = videoLinkInput.value.trim();
+            
+            if (linkValue !== '') {
+                resetVideoState(); // Resets state and ensures overlay/send button are visible first
+                
+                // Validate URL format
+                try {
+                    new URL(linkValue);
+                } catch (e) {
+                    showMessage('Please enter a valid video URL.', 'error');
+                    return;
+                }
+
+                videoPreview.src = linkValue;
+                videoPreview.muted = false;
+                videoPreview.load();
+                
+                // Add error handling for video loading
+                videoPreview.onerror = () => {
+                    showMessage('Could not load video from the provided link. Please check the URL.', 'error');
+                    recordOverlay.classList.remove('hidden', 'fade-out');
+                };
+                
+                videoPreview.onloadeddata = () => {
+                    // Fade out record overlay when link is present and video loads successfully
+                    recordOverlay.classList.add('fade-out');
+                    setTimeout(() => {
+                        recordOverlay.classList.add('hidden'); // Hide after fade
+                    }, FADE_DURATION);
+                    showMessage('Using provided video link.', 'info');
+                };
+                
+            } else {
+                videoPreview.src = '';
+                videoPreview.srcObject = null;
+                // Show record overlay if link is cleared
+                recordOverlay.classList.remove('hidden', 'fade-out');
+            }
+        });
+
+        // Send functionality
+        sendButton.addEventListener('click', async () => {
+            // Prevent multiple clicks
+            if (sendButton.classList.contains('fade-out')) {
+                return;
+            }
+
+            // Fade out send button immediately
+            sendButton.classList.add('fade-out');
+            setTimeout(() => {
+                sendButton.classList.add('hidden'); // Hide after fade
+            }, FADE_DURATION);
+
+            const phoneNumber = phoneNumberInput.value.trim();
+            const emailAddress = emailAddressInput.value.trim();
+            const recipientContact = recipientContactInput.value.trim(); // New: Get recipient contact
+            let videoToShare = '';
+
+            let contactInfo = '';
+            if (phoneNumber) {
+                contactInfo += `My Phone: ${phoneNumber}\n`;
+            }
+            if (emailAddress) {
+                contactInfo += `My Email: ${emailAddress}\n`;
+            }
+            // Only add recipient info if it's provided
+            if (recipientContact) {
+                contactInfo += `\nSend to: ${recipientContact}\n`; // Clarified label
+            }
+            contactInfo = contactInfo.trim();
+
+            try {
+                if (recordedVideoBlob) {
+                    if (navigator.canShare && navigator.canShare({ files: [new File([recordedVideoBlob], 'my_pitch.webm', { type: 'video/webm' })] })) {
+                        await navigator.share({
+                            files: [new File([recordedVideoBlob], 'my_pitch.webm', { type: 'video/webm' })],
+                            title: 'My Video Pitch',
+                            text: `Here's my video pitch!\n\n${contactInfo}`.trim()
+                        });
+                        showMessage('Video pitch sent successfully!', 'success');
+                    } else {
+                        showMessage('Your browser does not support direct video file sending. Please use a video link instead.', 'error');
+                        sendButton.classList.remove('hidden', 'fade-out'); // Show button again on error
+                    }
+                } else if (videoLinkInput.value.trim()) {
+                    videoToShare = videoLinkInput.value.trim();
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: 'My Video Pitch',
+                            text: `Here's my video pitch!\n\nVideo: ${videoToShare}\n\n${contactInfo}`.trim()
+                        });
+                        showMessage('Video pitch sent successfully!', 'success');
+                    } else {
+                        // Fallback to clipboard
+                        const shareText = `Here's my video pitch!\n\nVideo: ${videoToShare}\n\n${contactInfo}`.trim();
+                        
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            try {
+                                await navigator.clipboard.writeText(shareText);
+                                showMessage('Content copied to clipboard! You can now paste it into any messaging app.', 'info');
+                            } catch (err) {
+                                throw new Error('Clipboard API failed');
+                            }
+                        } else {
+                            // Fallback for older browsers
+                            const textArea = document.createElement("textarea");
+                            textArea.value = shareText;
+                            textArea.style.position = 'fixed';
+                            textArea.style.left = '-999999px';
+                            textArea.style.top = '-999999px';
+                            document.body.appendChild(textArea);
+                            textArea.focus();
+                            textArea.select();
+                            
+                            try {
+                                const successful = document.execCommand('copy');
+                                if (!successful) {
+                                    throw new Error('execCommand failed');
+                                }
+                                showMessage('Content copied to clipboard! You can now paste it into any messaging app.', 'info');
+                            } catch (err) {
+                                console.error('Fallback: Could not copy text', err);
+                                showMessage('Could not send or copy. Please manually copy the video link and contact info.', 'error');
+                            } finally {
+                                document.body.removeChild(textArea);
+                            }
+                        }
+                        sendButton.classList.remove('hidden', 'fade-out'); // Show button again on error/fallback
+                    }
+                } else {
+                    showMessage('Please record a video or provide a video link before sending.', 'error');
+                    sendButton.classList.remove('hidden', 'fade-out'); // Show button again if nothing to send
+                }
+            } catch (error) {
+                console.error('Error sharing:', error);
+                if (error.name === 'AbortError') {
+                    showMessage('Sharing was cancelled.', 'info');
+                } else {
+                    showMessage('Failed to send. Please try again.', 'error');
+                }
+                sendButton.classList.remove('hidden', 'fade-out'); // Show button again on error
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            resetVideoState();
+        });
+    </script>
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Check if we're on HTTPS or localhost (required for service worker)
+          if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            navigator.serviceWorker.register('./service-worker.js')
+              .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                  const newWorker = registration.installing;
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New content is available, show update notification
+                      if (confirm('New version available! Reload to update?')) {
+                        window.location.reload();
+                      }
+                    }
+                  });
+                });
+              })
+              .catch(err => {
+                console.log('ServiceWorker registration failed: ', err);
+              });
+          } else {
+            console.log('ServiceWorker requires HTTPS or localhost');
+          }
+        });
+      }
     </script>
 </body>
 </html> 
