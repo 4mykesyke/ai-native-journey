@@ -1,7 +1,7 @@
 const CACHE_NAME = 'share-contact-v1';
 const urlsToCache = [
   './',
-  './share contact',
+  './share-contact.html',
   './manifest.json',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png',
@@ -36,7 +36,7 @@ self.addEventListener('fetch', event => {
       .catch(() => {
         // Fallback for offline
         if (event.request.destination === 'document') {
-          return caches.match('./share contact');
+          return caches.match('./share-contact.html');
         }
       })
   );
