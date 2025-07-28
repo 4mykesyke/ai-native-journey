@@ -142,7 +142,7 @@
             color: #fff;
         }
 
-        /* Styling to remove gap between specific input fields */
+        /* Styling for grouped input fields */
         .input-group {
             display: flex;
             flex-direction: column;
@@ -151,8 +151,9 @@
         .input-group > div {
             margin-bottom: 0; /* Ensure no extra margin from parent gap */
         }
+        /* Apply a small margin between inputs within the group, except for the last one */
         .input-group > div:not(:last-child) {
-            margin-bottom: 0.75rem; /* A small gap between inputs for readability */
+            margin-bottom: 0.75rem;
         }
 
         /* Utility class for fading elements */
@@ -193,7 +194,7 @@
             </div>
         </div>
 
-        <!-- Grouped Input Fields with no internal gap -->
+        <!-- Combined Input Fields: Your Info + Recipient Info -->
         <div class="input-group">
             <!-- Video Link Input -->
             <div>
@@ -202,12 +203,17 @@
 
             <!-- Phone Number Input -->
             <div>
-                <input type="tel" id="phoneNumber" placeholder="Phone Number" class="focus:border-none focus:ring-0 focus:shadow-none">
+                <input type="tel" id="phoneNumber" placeholder="Your Phone Number" class="focus:border-none focus:ring-0 focus:shadow-none">
             </div>
 
             <!-- Email Input -->
             <div>
-                <input type="email" id="emailAddress" placeholder="Email Address" class="focus:border-none focus:ring-0 focus:shadow-none">
+                <input type="email" id="emailAddress" placeholder="Your Email Address" class="focus:border-none focus:ring-0 focus:shadow-none">
+            </div>
+
+            <!-- Recipient Contact Input (now part of the same group) -->
+            <div>
+                <input type="text" id="recipientContact" placeholder="Recipient Phone or Email" class="focus:border-none focus:ring-0 focus:shadow-none">
             </div>
         </div>
 
@@ -232,6 +238,7 @@
         const stopButton = document.getElementById('stopButton');
         const phoneNumberInput = document.getElementById('phoneNumber');
         const emailAddressInput = document.getElementById('emailAddress');
+        const recipientContactInput = document.getElementById('recipientContact'); // New: Recipient contact input
         const sendButton = document.getElementById('sendButton');
         const messageBox = document.getElementById('messageBox');
 
@@ -497,14 +504,19 @@
 
             const phoneNumber = phoneNumberInput.value.trim();
             const emailAddress = emailAddressInput.value.trim();
+            const recipientContact = recipientContactInput.value.trim(); // New: Get recipient contact
             let videoToShare = '';
 
             let contactInfo = '';
             if (phoneNumber) {
-                contactInfo += `Phone: ${phoneNumber}\n`;
+                contactInfo += `My Phone: ${phoneNumber}\n`;
             }
             if (emailAddress) {
-                contactInfo += `Email: ${emailAddress}\n`;
+                contactInfo += `My Email: ${emailAddress}\n`;
+            }
+            // Only add recipient info if it's provided
+            if (recipientContact) {
+                contactInfo += `\nSend to: ${recipientContact}\n`; // Clarified label
             }
             contactInfo = contactInfo.trim();
 
