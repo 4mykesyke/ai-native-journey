@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Mini Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 
+    Chosen Palette: Neutral Authority (Light Beige/Gray background, Calm Blue accent, with Green/Red/Yellow for status indicators).
+    Application Structure Plan: A single-view, task-oriented layout. The structure includes a header, a primary interaction section with an input form, and a dynamic results area. A footer contains crucial information about the tool's limitations. This structure was chosen to be direct and user-friendly, guiding the user to the single core task of checking a fact while ensuring they are aware of the application's scope and limitations, as outlined in the source document.
+    Visualization & Content Choices: 
+    - Claim Input -> Goal: Inform -> Method: HTML textarea -> Interaction: User types claim. -> Justification: Standard and intuitive method for text input.
+    - Fact Check Trigger -> Goal: Interact -> Method: HTML button -> Interaction: User clicks to initiate AI check. -> Justification: Clear call-to-action.
+    - Verdict Display -> Goal: Inform -> Method: Styled HTML tag with Unicode Icon (✔, ❌, ❓) -> Interaction: Dynamically updated text and color. -> Justification: Provides immediate, scannable visual feedback on the result.
+    - Confidence Score -> Goal: Inform -> Method: HTML/CSS progress bar (nested divs) -> Interaction: Bar width updated via JS. -> Justification: A more intuitive and visually appealing representation of a percentage than plain text. Chart.js would be overkill.
+    - Justification -> Goal: Inform -> Method: HTML text block -> Interaction: Text content updated via JS. -> Justification: Provides necessary context for the AI's verdict as required by the project definition.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .transition-all {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+    <div class="container mx-auto px-4 py-8 md:py-16 min-h-screen flex flex-col items-center">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">AI Personal Fact-Checker</h1>
+            <p class="mt-2 text-lg text-gray-600 max-w-2xl mx-auto">A mini-project to offer quick, preliminary assessments of simple factual claims.</p>
+        </header>
+
+        <main class="w-full max-w-2xl bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+            <div id="fact-checker-tool">
+                <div>
+                    <label for="claim-input" class="block text-sm font-medium text-gray-700 mb-1">Enter a statement to check:</label>
+                    <textarea id="claim-input" name="claim-input" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="e.g., The sky is blue. The moon is made of cheese."></textarea>
+                </div>
+                <div class="mt-4">
+                    <button id="check-button" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-gray-400">
+                        Check Fact
+                    </button>
+                </div>
+            </div>
+
+            <div id="result-container" class="mt-6 hidden">
+                <div class="border-t pt-6">
+                     <h3 class="text-sm font-semibold text-gray-500 mb-2">Analysis Result:</h3>
+                     <div id="verdict-card" class="p-4 rounded-lg transition-all">
+                        <div class="flex items-center">
+                            <span id="verdict-icon" class="text-2xl mr-3"></span>
+                            <span id="verdict-text" class="text-xl font-bold"></span>
+                        </div>
+                        <p id="justification-text" class="mt-2 text-sm"></p>
+                        <div class="mt-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-medium text-gray-600">Confidence</span>
+                                <span id="confidence-value" class="text-xs font-bold text-gray-800"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="confidence-bar" class="h-2.5 rounded-full transition-all"></div>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="w-full max-w-2xl mt-8 text-center text-gray-500 text-xs">
+            <h4 class="font-bold text-sm mb-2">Limitations & Scope</h4>
+            <p class="mb-2">This tool is for preliminary, personal use and cannot replace expert analysis. It is designed for simple, unambiguous claims and relies on the AI's existing knowledge, which may not be real-time or completely accurate. It does not check opinions.</p>
+            <p>&copy; 2025 AI Mini-Project. All Rights Reserved.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkButton = document.getElementById('check-button');
+            const claimInput = document.getElementById('claim-input');
+            const resultContainer = document.getElementById('result-container');
+            const verdictCard = document.getElementById('verdict-card');
+            const verdictIcon = document.getElementById('verdict-icon');
+            const verdictText = document.getElementById('verdict-text');
+            const justificationText = document.getElementById('justification-text');
+            const confidenceValue = document.getElementById('confidence-value');
+            const confidenceBar = document.getElementById('confidence-bar');
+
+            const mockAIResponses = [
+                {
+                    keywords: ['sky', 'blue'],
+                    verdict: 'Likely True',
+                    justification: 'Based on widely accepted scientific principles of light scattering in the Earth\'s atmosphere, the sky appears blue to the human eye during a clear day.',
+                    confidence: 95,
+                    icon: '✔',
+                    colors: {
+                        bg: 'bg-green-50',
+                        text: 'text-green-800',
+                        bar: 'bg-green-600'
+                    }
+                },
+                {
+                    keywords: ['moon', 'cheese'],
+                    verdict: 'Likely False',
+                    justification: 'Scientific evidence from lunar missions indicates the moon is composed of rock and minerals, not cheese. This is a common folkloric concept.',
+                    confidence: 99,
+                    icon: '❌',
+                    colors: {
+                        bg: 'bg-red-50',
+                        text: 'text-red-800',
+                        bar: 'bg-red-600'
+                    }
+                },
+                {
+                    keywords: ['water', 'wet'],
+                    verdict: 'Likely True',
+                    justification: 'The property of being "wet" is a fundamental characteristic of water in its liquid state due to its ability to adhere to and coat surfaces.',
+                    confidence: 98,
+                    icon: '✔',
+                    colors: {
+                        bg: 'bg-green-50',
+                        text: 'text-green-800',
+                        bar: 'bg-green-600'
+                    }
+                },
+                {
+                    keywords: ['paris', 'france'],
+                    verdict: 'Likely True',
+                    justification: 'Paris is the capital and most populous city of France, a well-established geographical fact.',
+                    confidence: 100,
+                    icon: '✔',
+                    colors: {
+                        bg: 'bg-green-50',
+                        text: 'text-green-800',
+                        bar: 'bg-green-600'
+                    }
+                },
+                 {
+                    keywords: ['tomorrow', 'rain'],
+                    verdict: 'Cannot Verify',
+                    justification: 'As an AI without real-time data access, I cannot predict future weather events. Please consult a local weather forecast.',
+                    confidence: 0,
+                    icon: '❓',
+                    colors: {
+                        bg: 'bg-gray-100',
+                        text: 'text-gray-800',
+                        bar: 'bg-gray-500'
+                    }
+                },
+                {
+                    keywords: ['cats', 'better', 'dogs'],
+                    verdict: 'Cannot Verify',
+                    justification: 'This is a subjective opinion and cannot be fact-checked. The preference for cats or dogs varies by individual.',
+                    confidence: 0,
+                    icon: '❓',
+                    colors: {
+                        bg: 'bg-gray-100',
+                        text: 'text-gray-800',
+                        bar: 'bg-gray-500'
+                    }
+                },
+                {
+                    default: true,
+                    verdict: 'Uncertain',
+                    justification: 'The provided statement is either too complex, ambiguous, or falls outside my current knowledge base for a confident assessment.',
+                    confidence: 30,
+                    icon: '🤔',
+                    colors: {
+                        bg: 'bg-yellow-50',
+                        text: 'text-yellow-800',
+                        bar: 'bg-yellow-500'
+                    }
+                }
+            ];
+            
+            const handleFactCheck = () => {
+                const inputText = claimInput.value.trim().toLowerCase();
+                if (!inputText) return;
+                
+                checkButton.disabled = true;
+                checkButton.textContent = 'Analyzing...';
+                resultContainer.classList.add('hidden');
+
+                setTimeout(() => {
+                    let response = mockAIResponses.find(r => r.default);
+
+                    for (const res of mockAIResponses) {
+                        if (res.keywords && res.keywords.every(kw => inputText.includes(kw))) {
+                            response = res;
+                            break;
+                        }
+                    }
+
+                    displayResults(response);
+                    
+                    checkButton.disabled = false;
+                    checkButton.textContent = 'Check Fact';
+                }, 1500); 
+            };
+
+            const displayResults = (result) => {
+                verdictIcon.textContent = result.icon;
+                verdictText.textContent = result.verdict;
+                justificationText.textContent = result.justification;
+                confidenceValue.textContent = `${result.confidence}%`;
+                
+                confidenceBar.style.width = `${result.confidence}%`;
+                
+                verdictCard.className = `p-4 rounded-lg transition-all ${result.colors.bg} ${result.colors.text}`;
+                confidenceBar.className = `h-2.5 rounded-full transition-all ${result.colors.bar}`;
+                verdictText.className = `text-xl font-bold ${result.colors.text}`;
+
+                resultContainer.classList.remove('hidden');
+            };
+
+            checkButton.addEventListener('click', handleFactCheck);
+            claimInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleFactCheck();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

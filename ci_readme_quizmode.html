@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README: AI-Powered Personal Fact-Checker (Quiz Mode)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 0.5em;
+            text-align: center;
+        }
+        h2 {
+            color: #34495e;
+            font-size: 1.8em;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.3em;
+        }
+        h3 {
+            color: #34495e;
+            font-size: 1.3em;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+        ol {
+            list-style-type: decimal;
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+        li {
+            margin-bottom: 0.5em;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI-Powered Personal Fact-Checker (Quiz Mode)</h1>
+
+    <h2>About This Project</h2>
+    <p>This mini-project transforms a basic fact-checker into an interactive quiz application. It challenges users with general knowledge questions and immediately verifies their answers, providing instant feedback on correctness. The aim is to create an engaging and educational tool that demonstrates simple data handling and UI updates in a web environment.</p>
+
+    <h2>How It Works</h2>
+    <p>The core logic of this project is built using HTML, CSS (via Tailwind CSS), and JavaScript.</p>
+    <ol>
+        <li><strong>Question Display:</strong> Upon loading, the application randomly selects a question from a predefined "encyclopedia" of questions (<code>quizQuestions</code> array in the JavaScript code). This question is then displayed in the designated "Question" box.</li>
+        <li><strong>User Input:</strong> The user types their answer into the "Your Answer" text area.</li>
+        <li><strong>Answer Verification:</strong> When the "Verify Answer" button is clicked (or Enter is pressed), the JavaScript code compares the user's input (after being trimmed and converted to lowercase for consistency) against the <code>correctAnswer</code> stored for the current question.</li>
+        <li><strong>Dynamic Feedback:</strong>
+            <ul>
+                <li>If the answer is correct, the "Verification Result" section updates to show "Correct!" with a green indicator, a justification, and 100% confidence.</li>
+                <li>If the answer is incorrect, it shows "Incorrect" with a red indicator, a justification, and low confidence.</li>
+                <li>If the answer box is left empty, it provides a prompt to enter an answer.</li>
+            </ul>
+        </li>
+        <li><strong>Next Question:</strong> After displaying the result, the application automatically loads a new random question after a short delay (3 seconds), allowing for continuous quiz-taking.</li>
+        <li><strong>Styling:</strong> Tailwind CSS is used for responsive and modern styling, with specific colors applied to the background, question, answer boxes, and the verification button for a cohesive visual theme.</li>
+    </ol>
+
+    <h2>How to Run It</h2>
+    <p>To run this project, follow these simple steps:</p>
+    <ol>
+        <li><strong>Save the Code:</strong> Copy the entire HTML code provided in the <code>ai-fact-checker-app</code> Canvas.</li>
+        <li><strong>Create an HTML File:</strong> Paste the copied code into a new text file.</li>
+        <li><strong>Save the File:</strong> Save the file with an <code>.html</code> extension (e.g., <code>quiz_fact_checker.html</code>).</li>
+        <li><strong>Open in Browser:</strong> Open the saved HTML file using any web browser (e.g., Chrome, Firefox, Edge).</li>
+    </ol>
+    <p>The quiz interface will load, presenting you with a random question. Type your answer and click "Verify Answer" to see the result and proceed to the next question.</p>
+</body>
+</html> 
