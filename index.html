@@ -226,6 +226,16 @@
                 <span class="btn-text">Send</span>
             </button>
         </div>
+
+        <!-- Install PWA Button -->
+        <div class="flex justify-center mt-4">
+            <button id="installBtn" class="btn btn-action" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 2a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 13.586V3a1 1 0 011-1z" />
+                </svg>
+                <span class="btn-text">Install App</span>
+            </button>
+        </div>
     </div>
 
     <script>
@@ -241,6 +251,7 @@
         const recipientContactInput = document.getElementById('recipientContact'); // New: Recipient contact input
         const sendButton = document.getElementById('sendButton');
         const messageBox = document.getElementById('messageBox');
+        const installBtn = document.getElementById('installBtn'); // PWA install button
 
         let mediaRecorder;
         let recordedChunks = [];
@@ -248,6 +259,7 @@
         let recordingTimer;
         let countdownInterval;
         let currentVideoURL = null;
+        let deferredPrompt; // For PWA installation
         const RECORD_DURATION = 30000; // 30 seconds in milliseconds
         const FADE_DURATION = 500; // Milliseconds for fade transition
 
@@ -522,33 +534,86 @@
 
             try {
                 if (recordedVideoBlob) {
-                    if (navigator.canShare && navigator.canShare({ files: [new File([recordedVideoBlob], 'my_pitch.webm', { type: 'video/webm' })] })) {
-                        await navigator.share({
-                            files: [new File([recordedVideoBlob], 'my_pitch.webm', { type: 'video/webm' })],
-                            title: 'My Video Pitch',
-                            text: `Here's my video pitch!\n\n${contactInfo}`.trim()
-                        });
-                        showMessage('Video pitch sent successfully!', 'success');
+                    // For recorded videos, we'll use clipboard sharing since direct file sharing is limited
+                    const shareText = `Here's my video pitch!\n\n${contactInfo}`.trim();
+                    
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        try {
+                            await navigator.clipboard.writeText(shareText);
+                            showMessage('Video pitch info copied! You can now paste it into WhatsApp or any messaging app.', 'info');
+                            
+                            // If recipient is a phone number, offer to open WhatsApp
+                            if (recipientContact && /^[\+]?[1-9][\d]{0,15}$/.test(recipientContact.replace(/\s/g, ''))) {
+                                const whatsappUrl = `https://wa.me/${recipientContact.replace(/\s/g, '')}?text=${encodeURIComponent(shareText)}`;
+                                if (confirm('Open WhatsApp to send this message?')) {
+                                    window.open(whatsappUrl, '_blank');
+                                }
+                            }
+                        } catch (err) {
+                            throw new Error('Clipboard API failed');
+                        }
                     } else {
-                        showMessage('Your browser does not support direct video file sending. Please use a video link instead.', 'error');
-                        sendButton.classList.remove('hidden', 'fade-out'); // Show button again on error
+                        // Fallback for older browsers
+                        const textArea = document.createElement("textarea");
+                        textArea.value = shareText;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        textArea.style.top = '-999999px';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        
+                        try {
+                            const successful = document.execCommand('copy');
+                            if (!successful) {
+                                throw new Error('execCommand failed');
+                            }
+                            showMessage('Video pitch info copied! You can now paste it into WhatsApp or any messaging app.', 'info');
+                            
+                            // If recipient is a phone number, offer to open WhatsApp
+                            if (recipientContact && /^[\+]?[1-9][\d]{0,15}$/.test(recipientContact.replace(/\s/g, ''))) {
+                                const whatsappUrl = `https://wa.me/${recipientContact.replace(/\s/g, '')}?text=${encodeURIComponent(shareText)}`;
+                                if (confirm('Open WhatsApp to send this message?')) {
+                                    window.open(whatsappUrl, '_blank');
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Fallback: Could not copy text', err);
+                            showMessage('Could not copy. Please manually copy the contact info.', 'error');
+                        } finally {
+                            document.body.removeChild(textArea);
+                        }
                     }
+                    sendButton.classList.remove('hidden', 'fade-out'); // Show button again
                 } else if (videoLinkInput.value.trim()) {
                     videoToShare = videoLinkInput.value.trim();
+                    const shareText = `Here's my video pitch!\n\nVideo: ${videoToShare}\n\n${contactInfo}`.trim();
+                    
                     if (navigator.share) {
-                        await navigator.share({
-                            title: 'My Video Pitch',
-                            text: `Here's my video pitch!\n\nVideo: ${videoToShare}\n\n${contactInfo}`.trim()
-                        });
-                        showMessage('Video pitch sent successfully!', 'success');
+                        try {
+                            await navigator.share({
+                                title: 'My Video Pitch',
+                                text: shareText
+                            });
+                            showMessage('Video pitch sent successfully!', 'success');
+                        } catch (error) {
+                            // If native sharing fails, fall back to clipboard
+                            throw new Error('Native sharing failed');
+                        }
                     } else {
                         // Fallback to clipboard
-                        const shareText = `Here's my video pitch!\n\nVideo: ${videoToShare}\n\n${contactInfo}`.trim();
-                        
                         if (navigator.clipboard && navigator.clipboard.writeText) {
                             try {
                                 await navigator.clipboard.writeText(shareText);
                                 showMessage('Content copied to clipboard! You can now paste it into any messaging app.', 'info');
+                                
+                                // If recipient is a phone number, offer to open WhatsApp
+                                if (recipientContact && /^[\+]?[1-9][\d]{0,15}$/.test(recipientContact.replace(/\s/g, ''))) {
+                                    const whatsappUrl = `https://wa.me/${recipientContact.replace(/\s/g, '')}?text=${encodeURIComponent(shareText)}`;
+                                    if (confirm('Open WhatsApp to send this message?')) {
+                                        window.open(whatsappUrl, '_blank');
+                                    }
+                                }
                             } catch (err) {
                                 throw new Error('Clipboard API failed');
                             }
@@ -569,6 +634,14 @@
                                     throw new Error('execCommand failed');
                                 }
                                 showMessage('Content copied to clipboard! You can now paste it into any messaging app.', 'info');
+                                
+                                // If recipient is a phone number, offer to open WhatsApp
+                                if (recipientContact && /^[\+]?[1-9][\d]{0,15}$/.test(recipientContact.replace(/\s/g, ''))) {
+                                    const whatsappUrl = `https://wa.me/${recipientContact.replace(/\s/g, '')}?text=${encodeURIComponent(shareText)}`;
+                                    if (confirm('Open WhatsApp to send this message?')) {
+                                        window.open(whatsappUrl, '_blank');
+                                    }
+                                }
                             } catch (err) {
                                 console.error('Fallback: Could not copy text', err);
                                 showMessage('Could not send or copy. Please manually copy the video link and contact info.', 'error');
@@ -596,6 +669,43 @@
         // Cleanup on page unload
         window.addEventListener('beforeunload', () => {
             resetVideoState();
+        });
+
+        // PWA Installation Logic
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install button
+            installBtn.style.display = 'flex';
+        });
+
+        // Handle install button click
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    showMessage('App installed successfully!', 'success');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                // Clear the deferredPrompt
+                deferredPrompt = null;
+                // Hide the install button
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // Handle app installed event
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            showMessage('App installed successfully!', 'success');
+            installBtn.style.display = 'none';
         });
     </script>
     <!-- Service Worker Registration -->
